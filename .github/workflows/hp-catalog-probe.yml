@@ -1,0 +1,31 @@
+name: HP catalogue probe (temporary)
+
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: windows-latest
+    steps:
+      - name: Install HPCMSL and query catalogue
+        shell: pwsh
+        run: |
+          Install-Module HP.Softpaq -Scope CurrentUser -Force -AcceptLicense -SkipPublisherCheck
+          Import-Module HP.Softpaq
+          (Get-Module HP.Softpaq).Version | Out-String | Write-Host
+          foreach ($platform in '8444','83b2') {
+            Write-Host "=== Platform $platform, all categories ==="
+            try {
+              Get-HPSoftpaqList -Platform $platform -Os win11 -OsVer 24H2 -Quiet |
+                Where-Object { $_.Name -match 'Support Assistant' } |
+                Select-Object Id, Name, Version, Category, ReleaseType, Url |
+                Format-List | Out-String | Write-Host
+            } catch { Write-Host "Failed: $($_.Exception.Message)" }
+          }
+          Write-Host '=== No platform (as the original script did) ==='
+          try {
+            Get-HPSoftpaqList -Quiet -ErrorAction Stop | Where-Object { $_.Name -match 'Support Assistant' } |
+              Select-Object Id, Name, Version, Category, Url | Format-List | Out-String | Write-Host
+          } catch { Write-Host "Failed: $($_.Exception.Message)" }
