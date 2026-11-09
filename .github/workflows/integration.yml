@@ -18,12 +18,12 @@ jobs:
 
       - name: Resolve, download, verify and extract (PowerShell 7)
         shell: pwsh
-        run: ./scripts/hp-support-assistant/Install-HPSupportAssistant.ps1 -VerifyOnly -Platform 83b2
+        run: ./scripts/hp-support-assistant/Install-HPSupportAssistant.ps1 -VerifyOnly -Platform 8D0A
 
       - name: Resolve, download, verify and extract (Windows PowerShell 5.1, as Intune runs it)
         shell: powershell
         run: |
-          .\scripts\hp-support-assistant\Install-HPSupportAssistant.ps1 -VerifyOnly -Platform 83b2
+          .\scripts\hp-support-assistant\Install-HPSupportAssistant.ps1 -VerifyOnly -Platform 8D0A
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload logs
@@ -68,7 +68,7 @@ jobs:
       - name: Install
         shell: powershell
         run: |
-          .\scripts\hp-support-assistant\Install-HPSupportAssistant.ps1 -Platform 83b2
+          .\scripts\hp-support-assistant\Install-HPSupportAssistant.ps1 -Platform 8D0A
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Detect (expect detected)
