@@ -26,6 +26,10 @@ jobs:
           .\scripts\hp-support-assistant\Install-HPSupportAssistant.ps1 -VerifyOnly -Platform 8D0A
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Fallback path (catalogue lookup forced to fail)
+        shell: pwsh
+        run: ./scripts/hp-support-assistant/Install-HPSupportAssistant.ps1 -VerifyOnly -Platform ffff
+
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
