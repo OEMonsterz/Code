@@ -46,7 +46,7 @@ jobs:
           Import-Module HP.Softpaq
           $cvaFile = Join-Path $env:RUNNER_TEMP 'hpsa.cva'
           Invoke-WebRequest -UseBasicParsing -OutFile $cvaFile 'https://ftp.hp.com/pub/softpaq/sp173501-174000/sp173774.cva'
-          $ids = Get-Content $cvaFile | ForEach-Object { if ($_ -match '^SysId\d+=(\w+)') { $Matches[1] } } | Select-Object -Unique -First 3
+          $ids = Get-Content $cvaFile | ForEach-Object { if ($_ -match '^SysId\d+=(\w+)') { $Matches[1] -replace '^0x','' } } | Select-Object -Unique -First 3
           Write-Host "Platforms from CVA: $($ids -join ', ')"
           foreach ($id in $ids) {
             Write-Host "=== Platform $id ==="
