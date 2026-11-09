@@ -1,0 +1,15 @@
+{
+  "sourceMode": "HPSoftPaqCatalog",
+  "productName": "HP Support Assistant",
+  "softPaqName": "HP Support Assistant",
+  "category": "Software",
+  "releaseTypes": ["Critical", "Recommended", "Routine"],
+  "expectedSigner": "HP Inc.",
+  "allowedHosts": ["ftp.hp.com"],
+  "minimumHpcmslVersion": "1.8.6",
+  "fallbackSoftPaqNumber": "173774",
+  "fallbackDownloadUri": "https://ftp.hp.com/pub/softpaq/sp173501-174000/sp173774.exe",
+  "fallbackVersion": "9.54.3.0",
+  "fallbackReleaseDate": "2026-07-07",
+  "notes": "The installer resolves the current HP Support Assistant SoftPaq from HP's catalogue (HPCMSL / Get-HPSoftpaqList) and downloads it over HTTPS from ftp.hp.com. The fallback is used only when the catalogue lookup fails, and is a download URL only, never a checked-in EXE. Every download is checked against HP's published hash (when present) and its digital signature before use."
+}

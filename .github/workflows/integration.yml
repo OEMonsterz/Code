@@ -1,0 +1,72 @@
+name: HP download, verify and install (integration)
+
+# Talks to HP's servers, so it runs on demand and weekly (to catch HP changing a URL or
+# publishing a new SoftPaq layout) rather than on every commit.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 5 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-download:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve, download, verify and extract (PowerShell 7)
+        shell: pwsh
+        run: ./scripts/hp-support-assistant/Install-HPSupportAssistant.ps1 -VerifyOnly -Platform 83b2
+
+      - name: Resolve, download, verify and extract (Windows PowerShell 5.1, as Intune runs it)
+        shell: powershell
+        run: |
+          .\scripts\hp-support-assistant\Install-HPSupportAssistant.ps1 -VerifyOnly -Platform 83b2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-logs
+          path: ${{ runner.temp }}/../../ProgramData/HPSupportAssistant-Intune/Logs/
+          if-no-files-found: ignore
+
+  full-cycle:
+    # Experimental: AppX provisioning may not be supported on the Windows Server runner image.
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install
+        shell: powershell
+        run: |
+          .\scripts\hp-support-assistant\Install-HPSupportAssistant.ps1 -Platform 83b2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Detect (expect detected)
+        shell: powershell
+        run: |
+          .\scripts\hp-support-assistant\Detect-HPSupportAssistant.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Uninstall
+        shell: powershell
+        run: |
+          .\scripts\hp-support-assistant\Uninstall-HPSupportAssistant.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Detect (expect not detected)
+        shell: powershell
+        run: |
+          .\scripts\hp-support-assistant\Detect-HPSupportAssistant.ps1
+          if ($LASTEXITCODE -eq 0) { throw 'App still detected after uninstall.' }
+          exit 0
+
+      - name: Show logs
+        if: always()
+        shell: powershell
+        run: Get-Content "$env:ProgramData\HPSupportAssistant-Intune\Logs\*.log" -ErrorAction SilentlyContinue
