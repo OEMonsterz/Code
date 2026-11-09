@@ -303,7 +303,7 @@ function Resolve-HPSASoftPaq {
             Select-Object -First 1
 
         if ($candidate) {
-            Write-InstallLog "Catalogue resolved $($candidate.Name) $($candidate.Version) as SoftPaq sp$($candidate.Id)."
+            Write-InstallLog "Catalogue resolved $($candidate.Name) $($candidate.Version) as SoftPaq $($candidate.Id)."
             return [pscustomobject]@{
                 Number  = ([string]$candidate.Id) -replace '^(?i)sp', ''
                 Version = [string]$candidate.Version
