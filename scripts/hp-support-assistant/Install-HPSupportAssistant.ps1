@@ -67,6 +67,9 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $AppName = 'HP Support Assistant'
+$ManifestFile = $ManifestPath
+$PlatformId = $Platform
+$AllowModuleInstall = -not $NoModuleInstall
 $PackagePattern = '*HPSupportAssistant*'
 $LogDir = Join-Path $StateRoot 'Logs'
 $LogFile = Join-Path $LogDir 'Install.log'
@@ -174,11 +177,11 @@ function Confirm-Prerequisite {
 }
 
 function Read-SourceManifest {
-    if (-not (Test-Path -LiteralPath $ManifestPath)) {
-        throw "Source manifest not found: $ManifestPath"
+    if (-not (Test-Path -LiteralPath $ManifestFile)) {
+        throw "Source manifest not found: $ManifestFile"
     }
 
-    $manifest = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
+    $manifest = Get-Content -LiteralPath $ManifestFile -Raw | ConvertFrom-Json
     foreach ($field in 'softPaqName', 'category', 'fallbackSoftPaqNumber', 'fallbackDownloadUri', 'fallbackVersion', 'expectedSigner', 'allowedHosts') {
         if (-not $manifest.$field) { throw "Manifest is missing required field '$field'." }
     }
@@ -267,7 +270,7 @@ function Import-HPSoftPaqModule {
         }
     }
 
-    if ($NoModuleInstall) {
+    if (-not $AllowModuleInstall) {
         throw 'HP SoftPaq cmdlets are not installed and -NoModuleInstall was specified.'
     }
 
@@ -291,7 +294,7 @@ function Resolve-HPSASoftPaq {
             Quiet       = $true
             ErrorAction = 'Stop'
         }
-        if ($Platform) { $listArgs.Platform = $Platform }
+        if ($PlatformId) { $listArgs.Platform = $PlatformId }
 
         $candidate = @(Get-HPSoftpaqList @listArgs) |
             Where-Object { $_.Name -eq $manifest.softPaqName -and (ConvertTo-VersionOrNull $_.Version) } |
@@ -380,6 +383,7 @@ function Save-HPSASoftPaq {
 }
 
 function Confirm-SoftPaqIntegrity {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingBrokenHashAlgorithms', '', Justification = 'MD5 is only a secondary check, used when HP publishes no SHA256. The digital signature check is always mandatory.')]
     param(
         [Parameter(Mandatory)][pscustomobject]$SoftPaq,
         [Parameter(Mandatory)][pscustomobject]$Expected
