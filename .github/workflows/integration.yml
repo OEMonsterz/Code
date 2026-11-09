@@ -44,8 +44,10 @@ jobs:
         run: |
           Install-Module HPCMSL -Scope CurrentUser -Force -AcceptLicense -SkipPublisherCheck -AllowClobber
           Import-Module HP.Softpaq
-          $cva = (Invoke-WebRequest -UseBasicParsing 'https://ftp.hp.com/pub/softpaq/sp173501-174000/sp173774.cva').Content
-          $ids = [regex]::Matches($cva, '(?m)^SysId\d+=(\w+)') | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique -First 3
+          $cvaFile = Join-Path $env:RUNNER_TEMP 'hpsa.cva'
+          Invoke-WebRequest -UseBasicParsing -OutFile $cvaFile 'https://ftp.hp.com/pub/softpaq/sp173501-174000/sp173774.cva'
+          $ids = Get-Content $cvaFile | ForEach-Object { if ($_ -match '^SysId\d+=(\w+)') { $Matches[1] } } | Select-Object -Unique -First 3
+          Write-Host "Platforms from CVA: $($ids -join ', ')"
           foreach ($id in $ids) {
             Write-Host "=== Platform $id ==="
             try {

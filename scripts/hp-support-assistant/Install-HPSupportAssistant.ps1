@@ -230,7 +230,7 @@ function Invoke-LoggedProcess {
     $stdout = if (Test-Path -LiteralPath $stdoutFile) { Get-Content -LiteralPath $stdoutFile -Raw } else { '' }
     $stderr = if (Test-Path -LiteralPath $stderrFile) { Get-Content -LiteralPath $stderrFile -Raw } else { '' }
     if (-not [string]::IsNullOrWhiteSpace($stdout)) { Write-InstallLog "stdout: $($stdout.Trim())" }
-    if (-not [string]::IsNullOrWhiteSpace($stderr)) { Write-InstallLog "stderr: $($stderr.Trim())" -Level WARNING }
+    if (-not [string]::IsNullOrWhiteSpace($stderr) -and $stderr -notmatch '^#< CLIXML') { Write-InstallLog "stderr: $($stderr.Trim())" -Level WARNING }
 
     return [pscustomobject]@{ ExitCode = $process.ExitCode; StdOut = $stdout; StdErr = $stderr }
 }
