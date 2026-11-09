@@ -3,9 +3,17 @@
   "productName": "HP Support Assistant",
   "softPaqName": "HP Support Assistant",
   "category": "Software",
-  "releaseTypes": ["Critical", "Recommended", "Routine"],
+  "releaseTypes": [
+    "Critical",
+    "Recommended",
+    "Routine"
+  ],
   "expectedSigner": "HP Inc.",
-  "allowedHosts": ["ftp.hp.com"],
+  "expectedBundleName": "AD2F1837.HPSupportAssistant",
+  "expectedBundlePublisher": "CN=ED346674-0FA1-4272-85CE-3187C9C86E26",
+  "allowedHosts": [
+    "ftp.hp.com"
+  ],
   "minimumHpcmslVersion": "1.8.6",
   "fallbackSoftPaqNumber": "173774",
   "fallbackDownloadUri": "https://ftp.hp.com/pub/softpaq/sp173501-174000/sp173774.exe",

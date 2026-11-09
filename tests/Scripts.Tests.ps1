@@ -28,7 +28,7 @@ Describe 'HPSupportAssistant.Sources.json' {
     }
 
     It 'has the fields the installer needs' {
-        foreach ($field in 'softPaqName', 'category', 'fallbackSoftPaqNumber', 'fallbackDownloadUri', 'fallbackVersion', 'expectedSigner', 'allowedHosts') {
+        foreach ($field in 'softPaqName', 'category', 'fallbackSoftPaqNumber', 'fallbackDownloadUri', 'fallbackVersion', 'expectedSigner', 'expectedBundleName', 'expectedBundlePublisher', 'allowedHosts') {
             $script:Manifest.$field | Should -Not -BeNullOrEmpty -Because "$field is required"
         }
     }

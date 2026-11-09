@@ -31,8 +31,30 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: verify-logs
-          path: ${{ runner.temp }}/../../ProgramData/HPSupportAssistant-Intune/Logs/
+          path: C:\ProgramData\HPSupportAssistant-Intune\Logs\
           if-no-files-found: ignore
+
+  catalogue-check:
+    # Diagnostic: does HP's catalogue list HP Support Assistant, and under which category?
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - name: Query catalogue for a platform HP lists as supported
+        shell: pwsh
+        run: |
+          Install-Module HPCMSL -Scope CurrentUser -Force -AcceptLicense -SkipPublisherCheck -AllowClobber
+          Import-Module HP.Softpaq
+          $cva = (Invoke-WebRequest -UseBasicParsing 'https://ftp.hp.com/pub/softpaq/sp173501-174000/sp173774.cva').Content
+          $ids = [regex]::Matches($cva, '(?m)^SysId\d+=(\w+)') | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique -First 3
+          foreach ($id in $ids) {
+            Write-Host "=== Platform $id ==="
+            try {
+              Get-HPSoftpaqList -Platform $id -Os win11 -OsVer 24H2 -Quiet |
+                Where-Object { $_.Name -match 'Support Assistant' } |
+                Select-Object Id, Name, Version, Category, ReleaseType |
+                Format-List | Out-String | Write-Host
+            } catch { Write-Host "Failed: $($_.Exception.Message)" }
+          }
 
   full-cycle:
     # Experimental: AppX provisioning may not be supported on the Windows Server runner image.

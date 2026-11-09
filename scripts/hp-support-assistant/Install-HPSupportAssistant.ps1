@@ -163,7 +163,7 @@ function Confirm-Prerequisite {
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
     if ([Environment]::Is64BitOperatingSystem -and -not [Environment]::Is64BitProcess) {
-        throw 'Running as a 32-bit process on 64-bit Windows. Set "Run script in 64-bit PowerShell host" to Yes in the Intune package.'
+        throw 'Running as a 32-bit process on 64-bit Windows. Launch the script with the 64-bit PowerShell (%SystemRoot%\\SysNative\\WindowsPowerShell\\v1.0\\powershell.exe from a 32-bit process).'
     }
     if (-not (Test-AdminContext)) {
         throw 'This script must run as SYSTEM or an elevated administrator.'
@@ -182,7 +182,7 @@ function Read-SourceManifest {
     }
 
     $manifest = Get-Content -LiteralPath $ManifestFile -Raw | ConvertFrom-Json
-    foreach ($field in 'softPaqName', 'category', 'fallbackSoftPaqNumber', 'fallbackDownloadUri', 'fallbackVersion', 'expectedSigner', 'allowedHosts') {
+    foreach ($field in 'softPaqName', 'category', 'fallbackSoftPaqNumber', 'fallbackDownloadUri', 'fallbackVersion', 'expectedSigner', 'expectedBundleName', 'expectedBundlePublisher', 'allowedHosts') {
         if (-not $manifest.$field) { throw "Manifest is missing required field '$field'." }
     }
     Confirm-DownloadUri -Uri $manifest.fallbackDownloadUri -AllowedHost @($manifest.allowedHosts)
@@ -220,6 +220,7 @@ function Invoke-LoggedProcess {
     Write-InstallLog "Running: $FilePath $($ArgumentList -join ' ')"
 
     $process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList -RedirectStandardOutput $stdoutFile -RedirectStandardError $stderrFile -WindowStyle Hidden -PassThru
+    $null = $process.Handle   # cache the handle, otherwise ExitCode can be empty in Windows PowerShell 5.1
     if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
         try { $process.Kill() } catch { Write-InstallLog "Failed to stop timed-out process: $($_.Exception.Message)" -Level WARNING }
         throw "Process timed out after $TimeoutSeconds seconds: $FilePath"
@@ -365,10 +366,9 @@ function Get-HPSAExpectedHash {
     foreach ($line in Get-Content -LiteralPath $CvaPath) {
         if ($line -match '^\s*([^=\[\];]+?)\s*=\s*(.*?)\s*$') { $fields[$Matches[1]] = $Matches[2] }
     }
-    Write-InstallLog "HP metadata fields: $(($fields.Keys | Sort-Object) -join ', ')"
-
     $shaKey = $fields.Keys | Where-Object { $_ -match 'SHA-?256' } | Select-Object -First 1
     $md5Key = $fields.Keys | Where-Object { $_ -match 'MD5' } | Select-Object -First 1
+    Write-InstallLog "HP metadata read ($($fields.Count) fields). Hash fields present: $(@($shaKey, $md5Key | Where-Object { $_ }) -join ', ')."
     return [pscustomobject]@{
         Sha256 = if ($shaKey) { $fields[$shaKey] } else { $null }
         Md5    = if ($md5Key) { $fields[$md5Key] } else { $null }
@@ -460,8 +460,8 @@ function Confirm-HPSABundle {
     $identity = Get-HPSABundleIdentity -BundlePath $bundlePath
     Write-InstallLog "Bundle identity: Name=$($identity.Name); Version=$($identity.Version); Publisher=$($identity.Publisher)."
 
-    if ($identity.Name -notlike $PackagePattern) { throw "Unexpected package name in bundle: $($identity.Name)" }
-    if ($identity.Publisher -notlike "*$($script:Manifest.expectedSigner)*") { throw "Unexpected package publisher in bundle: $($identity.Publisher)" }
+    if ($identity.Name -ne $script:Manifest.expectedBundleName) { throw "Unexpected package name in bundle: $($identity.Name) (expected $($script:Manifest.expectedBundleName))" }
+    if ($identity.Publisher -ne $script:Manifest.expectedBundlePublisher) { throw "Unexpected package publisher in bundle: $($identity.Publisher) (expected $($script:Manifest.expectedBundlePublisher))" }
     if (-not (ConvertTo-VersionOrNull $identity.Version)) { throw "Bundle version is not a valid version: $($identity.Version)" }
 
     $signature = Get-AuthenticodeSignature -LiteralPath $bundlePath

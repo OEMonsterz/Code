@@ -83,7 +83,7 @@ Write-UninstallLog "Starting $AppName uninstall."
 
 try {
     if ([Environment]::Is64BitOperatingSystem -and -not [Environment]::Is64BitProcess) {
-        throw 'Running as a 32-bit process on 64-bit Windows. Run the script in a 64-bit PowerShell host.'
+        throw 'Running as a 32-bit process on 64-bit Windows. Launch the script with the 64-bit PowerShell (%SystemRoot%\\SysNative\\WindowsPowerShell\\v1.0\\powershell.exe from a 32-bit process).'
     }
     if (-not (Test-AdminContext)) {
         throw 'This script must run as SYSTEM or an elevated administrator.'
