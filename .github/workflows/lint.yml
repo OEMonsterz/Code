@@ -1,4 +1,4 @@
-name: Lint PowerShell
+name: Lint and test PowerShell
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  psscriptanalyzer:
+  lint-and-test:
     runs-on: windows-latest
     steps:
       - name: Check out repo
@@ -25,3 +25,13 @@ jobs:
             throw "PSScriptAnalyzer found $($results.Count) issue(s)."
           }
           Write-Host 'No issues found.'
+
+      - name: Run Pester tests
+        shell: pwsh
+        run: |
+          Import-Module Pester -MinimumVersion 5.0
+          $config = New-PesterConfiguration
+          $config.Run.Path = './tests'
+          $config.Run.Exit = $true
+          $config.Output.Verbosity = 'Detailed'
+          Invoke-Pester -Configuration $config

@@ -68,7 +68,7 @@ function Initialize-Logging {
     }
 }
 
-function Write-Log {
+function Write-DetectionLog {
     param(
         [Parameter(Mandatory)][AllowEmptyString()][string]$Message,
         [ValidateSet('INFO', 'WARNING', 'ERROR', 'SUCCESS')][string]$Level = 'INFO'
@@ -95,12 +95,12 @@ Initialize-Logging
 
 # Get-AppxProvisionedPackage -Online fails in a 32-bit PowerShell on 64-bit Windows.
 if ([Environment]::Is64BitOperatingSystem -and -not [Environment]::Is64BitProcess) {
-    Write-Log 'Running as a 32-bit process on 64-bit Windows. Set "Run script as 32-bit process" to No in the Intune detection rule.' -Level ERROR
+    Write-DetectionLog 'Running as a 32-bit process on 64-bit Windows. Set "Run script as 32-bit process" to No in the Intune detection rule.' -Level ERROR
     exit 1
 }
 
 if (-not (Test-AdminContext)) {
-    Write-Log 'Detection must run as SYSTEM or an elevated administrator because provisioned AppX state is machine-scoped.' -Level ERROR
+    Write-DetectionLog 'Detection must run as SYSTEM or an elevated administrator because provisioned AppX state is machine-scoped.' -Level ERROR
     exit 1
 }
 
@@ -112,7 +112,7 @@ try {
         Select-Object -First 1
 }
 catch {
-    Write-Log "Could not query AppX state: $($_.Exception.Message)" -Level ERROR
+    Write-DetectionLog "Could not query AppX state: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
 
@@ -122,15 +122,15 @@ $detected = $appPresent -and ($bridgePresent -or -not $RequireUserBridge)
 
 if ($detected) {
     $summary = "$AppName detected. Provisioned=$([bool]$provisioned); InstalledForAnyUser=$([bool]$installed); UserBridge=$bridgePresent."
-    Write-Log $summary -Level SUCCESS
+    Write-DetectionLog $summary -Level SUCCESS
     Write-Output $summary   # Intune needs STDOUT output for a "detected" result.
     exit 0
 }
 
 if ($appPresent) {
-    Write-Log "$AppName present but the required user bridge ($ActiveSetupKeyName) is missing." -Level WARNING
+    Write-DetectionLog "$AppName present but the required user bridge ($ActiveSetupKeyName) is missing." -Level WARNING
 }
 else {
-    Write-Log "$AppName not detected as provisioned or installed." -Level INFO
+    Write-DetectionLog "$AppName not detected as provisioned or installed." -Level INFO
 }
 exit 1
