@@ -12,7 +12,7 @@ jobs:
       - name: Install HPCMSL and query catalogue
         shell: pwsh
         run: |
-          Install-Module HP.Softpaq -Scope CurrentUser -Force -AcceptLicense -SkipPublisherCheck
+          Install-Module HPCMSL -Scope CurrentUser -Force -AcceptLicense -SkipPublisherCheck -AllowClobber
           Import-Module HP.Softpaq
           (Get-Module HP.Softpaq).Version | Out-String | Write-Host
           foreach ($platform in '8444','83b2') {
