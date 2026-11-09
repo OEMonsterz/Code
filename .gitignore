@@ -1,0 +1,23 @@
+# Logs and temp files
+*.log
+*.log.old
+*.tmp
+
+# Packaged Intune apps and installers
+*.intunewin
+*.msi
+*.exe
+
+# Secrets and local config
+.env
+*.pfx
+*.cer
+*.key
+secrets.*
+*.local.ps1
+
+# Editor and OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

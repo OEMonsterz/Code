@@ -1,0 +1,37 @@
+name: Bug report
+description: Something isn't working as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please **don't paste secrets, tenant IDs or internal server names**. Redact them first.
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and build
+      placeholder: Windows 11 23H2 (22631.xxxx)
+    validations:
+      required: true
+  - type: dropdown
+    id: how
+    attributes:
+      label: How are you running it?
+      options:
+        - Intune (as SYSTEM)
+        - Local elevated PowerShell
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Relevant log lines
+      description: From `C:\ProgramData\HPSupportAssistant-Intune\Logs\Detection.log`
+      render: text
